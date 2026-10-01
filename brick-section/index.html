@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>G-TECH — интерактивный кирпич</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Caveat:wght@400;500&family=Russo+One&display=block" rel="stylesheet" />
+  <style>
+    :root { --bg: #e6e6e8; --ink: #1b202c; color-scheme: light; }
+    html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+    #stage { position: fixed; inset: 0; }
+    #stage canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; opacity: 0; transition: opacity .8s ease; }
+    #stage.ready canvas { opacity: 1; }
+    #reset {
+      position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+      font: 600 14px/1 system-ui, -apple-system, sans-serif; color: var(--ink);
+      background: #fff; border: 0; border-radius: 999px; padding: 12px 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08); cursor: pointer;
+      opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s;
+    }
+    #reset.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+    .embed #reset { bottom: 14px; padding: 9px 14px; font-size: 13px; }
+    /* embedded: transparent, the host page's background shows through */
+    html:has(body.embed), body.embed { background: transparent; }
+    /* opened directly (not in an iframe): plain white page */
+    html.top:has(body.embed), html.top body.embed { background: #fff; }
+    .embed #reset { box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+
+    /* hand-drawn hints, sized and placed relative to the stage height (the brick scales with it) */
+    #hints { position: fixed; inset: 0; pointer-events: none; }
+    .hint { position: absolute; overflow: visible; visibility: hidden; }
+    .hint text { font: 500 44px "Caveat", cursive; fill: #2b2b2e; }
+    .hint path { fill: none; stroke: #2b2b2e; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    #hint-spin { width: 40vh; left: max(6px, calc(50% - 64vh)); top: 3vh; }
+    #hint-peel { width: 46vh; left: min(calc(100% - 46vh - 6px), calc(50% + 17vh)); top: 62vh; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+      "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.7/build/index.module.js",
+      "three-bvh-csg": "https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.18/build/index.module.js"
+    }
+  }
+  </script>
+</head>
+<script>if (window.top === window) document.documentElement.classList.add('top');</script>
+<body class="embed">
+  <div id="stage"></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- line boil: the seed is swapped every frame by hints.js -->
+      <filter id="boil" x="-10%" y="-20%" width="120%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+  <div id="hints" aria-hidden="true">
+    <svg class="hint" id="hint-spin" viewBox="0 0 240 160">
+      <clipPath id="clip-spin"><rect class="reveal" x="0" y="0" width="0" height="160" /></clipPath>
+      <g filter="url(#boil)">
+        <g clip-path="url(#clip-spin)"><text x="6" y="66" transform="rotate(-9 60 52)">Крути</text></g>
+        <path class="arrow" d="M122 44 C 162 26, 206 44, 216 92" />
+        <path class="head" d="M204 80 L 216 94 L 226 76" />
+      </g>
+    </svg>
+    <svg class="hint" id="hint-peel" viewBox="0 0 280 160">
+      <clipPath id="clip-peel"><rect class="reveal" x="0" y="0" width="0" height="160" /></clipPath>
+      <g filter="url(#boil)">
+        <g clip-path="url(#clip-peel)"><text x="96" y="138" transform="rotate(-6 170 124)">Отклеивай</text></g>
+        <path class="arrow" d="M100 110 C 64 118, 26 104, 14 66" />
+        <path class="head" d="M4 80 L 13 64 L 28 76" />
+      </g>
+    </svg>
+  </div>
+  <button id="reset" type="button">Наклеить обратно</button>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
